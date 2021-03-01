@@ -1,9 +1,9 @@
-# laravel-express-router
+# laravel-expressjs-router
 Express router based on laravel router.
 
 ## Installation
 ```bash
-yarn add laravel-express-router
+yarn add laravel-expressjs-router
 ```
 ## Start
 
@@ -46,7 +46,7 @@ class TestController {
   }
 }
 
-module.exports default new TestController();
+module.exports.default = new TestController();
 ```
 
 ```js
