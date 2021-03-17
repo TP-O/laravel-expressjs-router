@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { path as root } from 'app-root-path';
 import { Request } from './request';
 import { Option } from './option';
 import { methods as supportedMethods } from './methods';
@@ -28,9 +27,14 @@ class LRouter extends Request {
   /**
    *
    * @param _router Express router
+   * @param _dir current directory
    * @param _constrollerPath Path to controller directory
    */
-  constructor(private _router: Router, private _constrollerPath = '/') {
+  constructor(
+    private _router: Router,
+    private _dir: string,
+    private _constrollerPath = '/',
+  ) {
     super();
     return new Proxy(this, {
       get(target, prop) {
@@ -74,8 +78,8 @@ class LRouter extends Request {
   private importAction(action: string): CallableFunction {
     const [file, method] = action.split('@');
 
-    // eslint-disable-next-line
-    const controller = require(`${root}${
+    /* eslint-disable-next-line */
+    const controller = require(`${this._dir}${
       this._constrollerPath
     }/${this._namespace.join('')}/${file}`).default;
 
@@ -132,6 +136,10 @@ class LRouter extends Request {
   }
 }
 
-export const lrouter = (expressRouter: Router, controllerPath: string) => {
-  return new LRouter(expressRouter, controllerPath);
+export const lrouter = (
+  expressRouter: Router,
+  dir: string,
+  controllerPath: string,
+) => {
+  return new LRouter(expressRouter, dir, controllerPath);
 };

@@ -11,9 +11,11 @@ yarn add laravel-expressjs-router
 app
 └── src
     └── controllers
-        ├── abc
-        │    └── test.controller.js
-        └── other.controller.js
+    │   ├── abc
+    │   │   └── test.controller.js
+    │   └── other.controller.js
+    │
+    └── index.js
 ```
 
 ```js
@@ -55,7 +57,7 @@ const express = require('express');
 const  { lrouter } = require('laravel-epxress-router');
 
 const app = express();
-const router = lrouter(app.Router(), '/src/controllers');
+const router = lrouter(app.Router(), __dirname, '/controllers');
 
 router.group(
   {

@@ -2,8 +2,10 @@ import express from 'express';
 import request from 'supertest';
 import { lrouter } from '../src/index';
 
+console.log(__dirname);
+
 const app = express();
-const router = lrouter(express.Router(), '/test/controllers');
+const router = lrouter(express.Router(), __dirname, '/../controllers');
 
 const middleware01 = (
   req: express.Request,
