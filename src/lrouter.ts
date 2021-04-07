@@ -34,8 +34,8 @@ export class LRouter extends Request {
   constructor(
     private _router: Router,
     private _dir: string,
-    private _constrollerPath = '/',
-    private _middlewarePath = '/',
+    private _constrollerPath = '/controllers',
+    private _middlewarePath = '/middleware',
   ) {
     super();
     return new Proxy(this, {

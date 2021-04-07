@@ -4,8 +4,8 @@ import { LRouter } from './lrouter';
 const lrouter = (
   expressRouter: Router,
   dir: string,
-  controllerPath: string,
-  middlewarePath: string,
+  controllerPath?: string,
+  middlewarePath?: string,
 ) => {
   return new LRouter(expressRouter, dir, controllerPath, middlewarePath);
 };
