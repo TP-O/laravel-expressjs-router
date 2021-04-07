@@ -2,34 +2,19 @@ import express from 'express';
 import request from 'supertest';
 import { lrouter } from '../src/index';
 
-console.log(__dirname);
-
 const app = express();
-const router = lrouter(express.Router(), __dirname, '/../controllers');
-
-const middleware01 = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  req.body.middleware01 = 'Passed middleware01';
-  next();
-};
-
-const middleware02 = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) => {
-  req.body.middleware02 = 'Passed middleware02';
-  next();
-};
+const router = lrouter(
+  express.Router(),
+  __dirname,
+  '/controllers',
+  '/middleware',
+);
 
 router.group(
   {
     prefix: '/api/v1',
     namespace: 'abc',
-    middleware: [middleware01],
+    middleware: ['middleware01'],
   },
   () => {
     router.get('/', (req: express.Request, res: express.Response) => {
@@ -56,7 +41,7 @@ router.group(
           message02: req.body.middleware02,
         });
       },
-      [middleware02],
+      'middleware02',
     );
   },
 );

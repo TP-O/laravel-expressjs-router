@@ -10,10 +10,15 @@ yarn add laravel-expressjs-router
 ```
 app
 └── src
-    └── controllers
+    ├── controllers
     │   ├── abc
     │   │   └── test.controller.js
+    │   │
     │   └── other.controller.js
+    │
+    ├── middelware
+    │   ├── middeware01.js
+    │   └── middeware02.js
     │
     └── index.js
 ```
@@ -52,18 +57,46 @@ module.exports.default = new TestController();
 ```
 
 ```js
+// middleware01.js
+import { NextFunction, Request, Response } from "express";
+
+class Middleware01 {
+  handle (req: Request, res: Response, next: NextFunction) {
+    console.log('Passed middleware01');
+    next();
+  }
+}
+
+module.exports.default = new Middleware01();
+```
+
+```js
+// middleware02.ts
+import { NextFunction, Request, Response } from "express";
+
+class Middleware02 {
+  handle (req: Request, res: Response, next: NextFunction) {
+    console.log('Passed middleware02');
+    next();
+  }
+}
+
+module.exports.default = new Middleware02();
+```
+
+```js
 // index.js
 const express = require('express');
 const  { lrouter } = require('laravel-epxress-router');
 
 const app = express();
-const router = lrouter(app.Router(), __dirname, '/controllers');
+const router = lrouter(app.Router(), __dirname, '/controllers', '/middleware');
 
 router.group(
   {
     prefix: '/api/v1',
     namespace: 'abc',
-    middleware: [middleware01],
+    middleware: ['middleware01'],
   },
   () => {
     router.get('/', (req, res) => { /* handle */ });
@@ -76,7 +109,7 @@ router.group(
       },
     );
 
-    router.get('/pass', (req, res) => { /* handle */ }, [middleware02],
+    router.get('/pass', (req, res) => { /* handle */ }, 'middleware02'/*, 'other middleware' */,
     );
   },
 );
