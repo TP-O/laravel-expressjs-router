@@ -61,9 +61,11 @@ module.exports.default = new TestController();
 import { NextFunction, Request, Response } from "express";
 
 class Middleware01 {
-  handle (req: Request, res: Response, next: NextFunction) {
-    console.log('Passed middleware01');
-    next();
+  handle() {
+    return (req: Request, res: Response, next: NextFunction) => {
+      req.body.middleware01 = 'Passed middleware01';
+      next();
+    };
   }
 }
 
@@ -75,9 +77,11 @@ module.exports.default = new Middleware01();
 import { NextFunction, Request, Response } from "express";
 
 class Middleware02 {
-  handle (req: Request, res: Response, next: NextFunction) {
-    console.log('Passed middleware02');
-    next();
+  handle(arg: any) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      req.body[arg] = 'Passed middleware02';
+      next();
+    };
   }
 }
 
@@ -96,7 +100,7 @@ router.group(
   {
     prefix: '/api/v1',
     namespace: 'abc',
-    middleware: ['middleware01'],
+    middleware: ['middleware01@handle'],
   },
   () => {
     router.get('/', (req, res) => { /* handle */ });
@@ -109,7 +113,7 @@ router.group(
       },
     );
 
-    router.get('/pass', (req, res) => { /* handle */ }, 'middleware02'/*, 'other middleware' */,
+    router.get('/pass', (req, res) => { /* handle */ }, ['middleware02@handle:middleware02'],
     );
   },
 );

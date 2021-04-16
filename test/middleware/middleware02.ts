@@ -1,9 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 
 class Middleware01 {
-  handle(req: Request, res: Response, next: NextFunction) {
-    req.body.middleware02 = 'Passed middleware02';
-    next();
+  handle(arg: any) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      req.body[arg] = 'Passed middleware02';
+      next();
+    };
   }
 }
 

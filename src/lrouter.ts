@@ -1,13 +1,12 @@
 import { Router } from 'express';
-import { Request } from './request';
-import { Option } from './option';
-import { methods as supportedMethods } from './methods';
+import { Importer } from './importer';
+import { Action, GroupOpts, Middleware } from './types';
 
-export class LRouter extends Request {
+export class LRouter {
   /**
-   * Current method
+   * Function importer.
    */
-  private _method = '';
+  private _importer: Importer;
 
   /**
    * Prefix of routes
@@ -22,7 +21,7 @@ export class LRouter extends Request {
   /**
    * Registered middleware
    */
-  private _middleware: string[] = [];
+  private _middleware: any[] = [];
 
   /**
    *
@@ -37,113 +36,157 @@ export class LRouter extends Request {
     private _constrollerPath = '/controllers',
     private _middlewarePath = '/middleware',
   ) {
-    super();
-    return new Proxy(this, {
-      get(target, prop) {
-        if (typeof prop === 'string' && supportedMethods.includes(prop)) {
-          target._method = prop;
-          return target.registerRoute;
-        }
-        return target[prop];
-      },
-    });
+    this._importer = new Importer();
   }
 
-  init(): Router {
+  /**
+   * Return the router,
+   */
+  public init() {
     return this._router;
   }
 
   /**
-   * Register Express route
+   * Group routes
    *
-   * @param path URI
-   * @param action called when route is accessed
+   * @param opts group options
+   * @param callback routes defined in callback will be in the same group
    */
-  private registerRoute(
-    path: string,
-    action: string | CallableFunction,
-    ...middleware: string[]
-  ): void {
-    this._router[this._method].apply(this._router, [
-      this._prefix.join('') + path,
-      ...this._middleware.map((m) => this.importMiddleware(m)),
-      ...middleware.map((m) => this.importMiddleware(m)),
-      typeof action === 'string' ? this.importAction(action) : action,
-    ]);
-  }
-
-  /**
-   * Get method from controller
-   *
-   * @param action controller and its method
-   */
-  private importAction(action: string): CallableFunction {
-    const [file, method] = action.split('@');
-
-    /* eslint-disable-next-line */
-    const controller = require(`${this._dir}${
-      this._constrollerPath
-    }/${this._namespace.join('')}/${file}`).default;
-
-    return controller[method];
-  }
-
-  private importMiddleware(middlewareName: string): CallableFunction {
-    /* eslint-disable-next-line */
-    const middleware = require(`${this._dir}${this._middlewarePath}/${middlewareName}`)
-      .default;
-
-    return middleware.handle;
+  public group(opts: GroupOpts, callback: CallableFunction) {
+    this.addOption(opts);
+    callback();
+    this.removeOption(opts);
   }
 
   /**
    * Add options of the group
    *
-   * @param opt group options
+   * @param opts group options
    */
-  private addOption(opt: Option): void {
-    if (opt.prefix) {
-      this._prefix.push(opt.prefix);
+  private addOption(opts: GroupOpts): void {
+    if (opts.prefix) {
+      this._prefix.push(opts.prefix);
     }
-    if (opt.namespace) {
+    if (opts.namespace) {
       this._namespace.push(
-        opt.namespace[0] === '/' ? opt.namespace : `/${opt.namespace}`,
+        opts.namespace[0] === '/' ? opts.namespace : `/${opts.namespace}`,
       );
     }
-    if (opt.middleware) {
-      this._middleware.push(...opt.middleware);
+    if (opts.middleware) {
+      this._middleware.push(...opts.middleware);
     }
   }
 
   /**
    * Remove options of the group
    *
-   * @param opt group options
+   * @param opts group options
    */
-  private removeOption(opt: Option): void {
-    if (opt.prefix) {
+  private removeOption(opts: GroupOpts): void {
+    if (opts.prefix) {
       this._prefix.pop();
     }
-    if (opt.namespace) {
+    if (opts.namespace) {
       this._namespace.pop();
     }
-    if (opt.middleware) {
+    if (opts.middleware) {
       this._middleware = this._middleware.slice(
         0,
-        this._middleware.length - opt.middleware.length,
+        this._middleware.length - opts.middleware.length,
       );
     }
   }
 
   /**
-   * Group routes
-   *
-   * @param opt group options
-   * @param callback routes defined in callback will be in the same group
+   * GET request.
    */
-  group(opt: Option, callback: CallableFunction): void {
-    this.addOption(opt);
-    callback();
-    this.removeOption(opt);
+  public get(path: string, action: Action, middleware?: Middleware) {
+    this._router.get(
+      this._prefix.join('') + path,
+      ...this.importMiddleware(this._middleware),
+      ...this.importMiddleware(middleware || []),
+      this.importAction(action),
+    );
+  }
+
+  /**
+   * POST request.
+   */
+  public post(path: string, action: Action, middleware?: Middleware) {
+    this._router.post(
+      this._prefix.join('') + path,
+      ...this.importMiddleware(this._middleware),
+      ...this.importMiddleware(middleware || []),
+      this.importAction(action),
+    );
+  }
+
+  /**
+   * PUT request.
+   */
+  public put(path: string, action: Action, middleware?: Middleware) {
+    this._router.put(
+      this._prefix.join('') + path,
+      ...this.importMiddleware(this._middleware),
+      ...this.importMiddleware(middleware || []),
+      this.importAction(action),
+    );
+  }
+
+  /**
+   * PATCH request.
+   */
+  public patch(path: string, action: Action, middleware?: Middleware) {
+    this._router.patch(
+      this._prefix.join('') + path,
+      ...this.importMiddleware(middleware || []),
+      this.importAction(action),
+    );
+  }
+
+  /**
+   * DELETE request.
+   */
+  public delete(path: string, action: Action, middleware?: Middleware) {
+    this._router.delete(
+      this._prefix.join('') + path,
+      ...this.importMiddleware(this._middleware),
+      ...this.importMiddleware(middleware || []),
+      this.importAction(action),
+    );
+  }
+
+  /**
+   * Import an action
+   *
+   * @param action handler.
+   */
+  private importAction(action: Action) {
+    return this._importer.import(
+      action,
+      `${this._dir}${this._constrollerPath}/${this._namespace.join('')}/`,
+    );
+  }
+
+  /**
+   * Import middlewares.
+   *
+   * @param middleware list of middleware.
+   */
+  private importMiddleware(middleware: Middleware) {
+    return middleware.map((m: any) => {
+      if (typeof m === 'string') {
+        const [method, args] = m.split(':');
+
+        if (args) {
+          return this._importer.import(
+            method,
+            `${this._dir}${this._middlewarePath}/`,
+          )(...args.split(','));
+        }
+      }
+
+      return this._importer.import(m, `${this._dir}${this._middlewarePath}/`)();
+    });
   }
 }

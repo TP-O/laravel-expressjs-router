@@ -14,7 +14,7 @@ router.group(
   {
     prefix: '/api/v1',
     namespace: 'abc',
-    middleware: ['middleware01'],
+    middleware: ['middleware01@handle'],
   },
   () => {
     router.get('/', (req: express.Request, res: express.Response) => {
@@ -41,7 +41,7 @@ router.group(
           message02: req.body.middleware02,
         });
       },
-      'middleware02',
+      ['middleware02@handle:middleware02'],
     );
   },
 );
@@ -92,6 +92,8 @@ describe('Route Test', () => {
 
   it('should pass middleware', async () => {
     const res = await request(app).get('/api/v1/pass');
+
+    console.log(res.body);
 
     expect(res.status).toEqual(200);
     expect(res.body).toHaveProperty('message01');
