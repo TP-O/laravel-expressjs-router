@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Importer } from './importer';
-import { Action, GroupOpts, Middleware } from './types';
+import { Action, GroupOpts, MethodOpts, Middleware } from './types';
 
 export class LRouter {
   /**
@@ -100,59 +100,59 @@ export class LRouter {
   /**
    * GET request.
    */
-  public get(path: string, action: Action, middleware?: Middleware) {
+  public get(opts: MethodOpts) {
     this._router.get(
-      this._prefix.join('') + path,
+      this._prefix.join('') + opts.path,
       ...this.importMiddleware(this._middleware),
-      ...this.importMiddleware(middleware || []),
-      this.importAction(action),
+      ...this.importMiddleware(opts.middleware || []),
+      this.importAction(opts.action),
     );
   }
 
   /**
    * POST request.
    */
-  public post(path: string, action: Action, middleware?: Middleware) {
+  public post(opts: MethodOpts) {
     this._router.post(
-      this._prefix.join('') + path,
+      this._prefix.join('') + opts.path,
       ...this.importMiddleware(this._middleware),
-      ...this.importMiddleware(middleware || []),
-      this.importAction(action),
+      ...this.importMiddleware(opts.middleware || []),
+      this.importAction(opts.action),
     );
   }
 
   /**
    * PUT request.
    */
-  public put(path: string, action: Action, middleware?: Middleware) {
+  public put(opts: MethodOpts) {
     this._router.put(
-      this._prefix.join('') + path,
+      this._prefix.join('') + opts.path,
       ...this.importMiddleware(this._middleware),
-      ...this.importMiddleware(middleware || []),
-      this.importAction(action),
+      ...this.importMiddleware(opts.middleware || []),
+      this.importAction(opts.action),
     );
   }
 
   /**
    * PATCH request.
    */
-  public patch(path: string, action: Action, middleware?: Middleware) {
+  public patch(opts: MethodOpts) {
     this._router.patch(
-      this._prefix.join('') + path,
-      ...this.importMiddleware(middleware || []),
-      this.importAction(action),
+      this._prefix.join('') + opts.path,
+      ...this.importMiddleware(opts.middleware || []),
+      this.importAction(opts.action),
     );
   }
 
   /**
    * DELETE request.
    */
-  public delete(path: string, action: Action, middleware?: Middleware) {
+  public delete(opts: MethodOpts) {
     this._router.delete(
-      this._prefix.join('') + path,
+      this._prefix.join('') + opts.path,
       ...this.importMiddleware(this._middleware),
-      ...this.importMiddleware(middleware || []),
-      this.importAction(action),
+      ...this.importMiddleware(opts.middleware || []),
+      this.importAction(opts.action),
     );
   }
 
@@ -169,7 +169,7 @@ export class LRouter {
   }
 
   /**
-   * Import middlewares.
+   * Import middleware.
    *
    * @param middleware list of middleware.
    */
@@ -178,15 +178,13 @@ export class LRouter {
       if (typeof m === 'string') {
         const [method, args] = m.split(':');
 
-        if (args) {
-          return this._importer.import(
-            method,
-            `${this._dir}${this._middlewarePath}/`,
-          )(...args.split(','));
-        }
+        return this._importer.import(
+          method,
+          `${this._dir}${this._middlewarePath}/`,
+        )(...(args?.split(',') || []));
       }
 
-      return this._importer.import(m, `${this._dir}${this._middlewarePath}/`)();
+      return this._importer.import(m, `${this._dir}${this._middlewarePath}/`);
     });
   }
 }

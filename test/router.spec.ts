@@ -1,55 +1,7 @@
-import express from 'express';
 import request from 'supertest';
-import { lrouter } from '../src/index';
+import { app } from './setup';
 
-const app = express();
-const router = lrouter(
-  express.Router(),
-  __dirname,
-  '/controllers',
-  '/middleware',
-);
-
-router.group(
-  {
-    prefix: '/api/v1',
-    namespace: 'abc',
-    middleware: ['middleware01@handle'],
-  },
-  () => {
-    router.get('/', (req: express.Request, res: express.Response) => {
-      return res.status(200).json({ message: 'Welcome message!' });
-    });
-
-    router.group(
-      {
-        prefix: '/tests',
-      },
-      () => {
-        router.get('/', 'test.controller@index');
-        router.post('/', 'test.controller@store');
-        router.put('/:id', 'test.controller@update');
-        router.delete('/:id', 'test.controller@destroy');
-      },
-    );
-
-    router.get(
-      '/pass',
-      (req: express.Request, res: express.Response) => {
-        return res.status(200).json({
-          message01: req.body.middleware01,
-          message02: req.body.middleware02,
-        });
-      },
-      ['middleware02@handle:middleware02'],
-    );
-  },
-);
-
-app.use(express.json());
-app.use(router.init());
-
-describe('Route Test', () => {
+describe('Test Router', () => {
   it('should return message welcome', async () => {
     const res = await request(app).get('/api/v1');
 
@@ -93,10 +45,9 @@ describe('Route Test', () => {
   it('should pass middleware', async () => {
     const res = await request(app).get('/api/v1/pass');
 
-    console.log(res.body);
-
     expect(res.status).toEqual(200);
     expect(res.body).toHaveProperty('message01');
     expect(res.body).toHaveProperty('message02');
+    expect(res.body).toHaveProperty('message03');
   });
 });

@@ -3,120 +3,63 @@ Express router based on laravel router.
 
 ## Installation
 ```bash
-yarn add laravel-expressjs-router
-```
-## Start
-
-```
-app
-└── src
-    ├── controllers
-    │   ├── abc
-    │   │   └── test.controller.js
-    │   │
-    │   └── other.controller.js
-    │
-    ├── middelware
-    │   ├── middeware01.js
-    │   └── middeware02.js
-    │
-    └── index.js
+npm install laravel-expressjs-router
 ```
 
+## Quickstart
+
+Initialize router
 ```js
-// test.controller.js
-class TestController {
-  index(req, res) {
-    res.status(200).json({
-      tests: [],
-    });
-  }
-
-  store(req, res) {
-    res.status(201).json({
-      id: req.body.id,
-      title: req.body.title,
-    });
-  }
-
-  update(req, res) {
-    res.status(200).json({
-      id: req.params.id,
-      title: req.body.title,
-    });
-  }
-
-  destroy(req, res) {
-    res.status(200).json({
-      id: req.params.id,
-    });
-  }
-}
-
-module.exports.default = new TestController();
-```
-
-```js
-// middleware01.js
-import { NextFunction, Request, Response } from "express";
-
-class Middleware01 {
-  handle() {
-    return (req: Request, res: Response, next: NextFunction) => {
-      req.body.middleware01 = 'Passed middleware01';
-      next();
-    };
-  }
-}
-
-module.exports.default = new Middleware01();
-```
-
-```js
-// middleware02.ts
-import { NextFunction, Request, Response } from "express";
-
-class Middleware02 {
-  handle(arg: any) {
-    return (req: Request, res: Response, next: NextFunction) => {
-      req.body[arg] = 'Passed middleware02';
-      next();
-    };
-  }
-}
-
-module.exports.default = new Middleware02();
-```
-
-```js
-// index.js
 const express = require('express');
-const  { lrouter } = require('laravel-epxress-router');
+const { lrouter } = require('laravel-expressjs-router');
+
+const router = lrouter({
+  router: express.Router(),
+  currentDir: __dirname,
+  controllerPath: '/controllers', // path to controller directory from current directory
+  middlewarePath: '/middleware', // path to middleware directory from current directory
+});
+
+// Create some routes here...
 
 const app = express();
-const router = lrouter(app.Router(), __dirname, '/controllers', '/middleware');
-
-router.group(
-  {
-    prefix: '/api/v1',
-    namespace: 'abc',
-    middleware: ['middleware01@handle'],
-  },
-  () => {
-    router.get('/', (req, res) => { /* handle */ });
-
-    router.group({ prefix: '/tests' }, () => {
-        router.get('/', 'test.controller@index');
-        router.post('/', 'test.controller@store');
-        router.put('/:id', 'test.controller@update');
-        router.delete('/:id', 'test.controller@destroy');
-      },
-    );
-
-    router.get('/pass', (req, res) => { /* handle */ }, ['middleware02@handle:middleware02'],
-    );
-  },
-);
-
 app.use(router.init());
+```
+
+Declare `controllerPath` and `controllerPath` when you want to call controller methods or middleware dynamically.
+
+## Usage
+
+### Group options
+```js
+const middleware = require('...');
+
+router.group({
+  prefix: '/api/v1', // url prefix for all sub-routes
+  namespace: 'api', // controller namespace for all sub-routes (dynamic calls only)
+  middleware: [ // middleware for all sub-routes
+    'middleware01@handle', // filename@method
+    'middleware02@handle:arg1,arg2', // filename@method:<argument 1>, ....
+    middleware.handle(), // call middleware method directly
+  ],
+})
+```
+
+### Method options
+Supported method: `get`, `post`, `put`, `path`, `delete`.
+
+```js
+const testcontroller = require('...');
+
+router.get({
+  path: '/',
+  action: 'testcontroller@all', // filename@method
+  middleware: ['middleware01@handle'],
+});
+
+router.post({
+  path: '/',
+  action: testcontroller.create,
+});
+
 ```

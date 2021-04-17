@@ -1,13 +1,13 @@
-import { Router } from 'express';
 import { LRouter } from './lrouter';
+import { RouterOpts } from './types';
 
-const lrouter = (
-  expressRouter: Router,
-  dir: string,
-  controllerPath?: string,
-  middlewarePath?: string,
-) => {
-  return new LRouter(expressRouter, dir, controllerPath, middlewarePath);
+const lrouter = (opts: RouterOpts) => {
+  return new LRouter(
+    opts.router,
+    opts.currentDir,
+    opts.controllerPath,
+    opts.middlewarePath,
+  );
 };
 
 export { lrouter, LRouter };
